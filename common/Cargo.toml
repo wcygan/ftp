@@ -8,6 +8,7 @@ anyhow.workspace = true
 tokio.workspace = true
 bincode.workspace = true
 serde.workspace = true
+serde_derive.workspace = true
 bytes.workspace = true
 tracing.workspace = true
 tracing-subscriber.workspace = true

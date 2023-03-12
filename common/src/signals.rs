@@ -1,14 +1,19 @@
+use serde_derive::{Deserialize, Serialize};
+
 /// The signals that can be sent between the client and server
+#[derive(Debug, Serialize, Deserialize)]
 pub enum Signal {
-    /// Write a file to the server
-    Write {
+    /// Upload a file to the server
+    Upload {
         /// The name of the file to write to
-        file: String,
+        filename: String,
+        /// The size of the file to write
+        size: u64,
     },
-    /// Read a file from the server
-    Read {
+    /// Download a file from the server
+    Download {
         /// The name of the file to read from
-        file: String,
+        filename: String,
     },
     /// Acknowledge a signal
     ///

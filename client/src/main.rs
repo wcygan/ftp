@@ -2,6 +2,9 @@ use anyhow::Result;
 use clap::Parser;
 use tokio::io::{AsyncReadExt};
 use tokio::net::TcpStream;
+use common::signals::Signal;
+use common::signals::Signal::Upload;
+use common::transmission::Connection;
 use crate::args::Args;
 
 mod args;
@@ -9,11 +12,28 @@ mod args;
 #[tokio::main]
 async fn main() -> Result<()> {
     let args = Args::parse();
-    let _f = tokio::fs::File::open(args.file).await?;
-    let mut socket = TcpStream::connect("127.0.0.1:6655").await?;
-    let mut buf = [0; 1024];
-    let n = socket.read(&mut buf).await?;
-    println!("recv: {}", String::from_utf8_lossy(&buf[0..n]));
+    let f = tokio::fs::File::open(args.file.as_str()).await?;
+
+    let upload = Upload {
+        filename: args.file,
+        size: f.metadata().await?.len(),
+    };
+
+    let mut conn = Connection::dial("127.0.0.1:6655").await?;
+
+    conn.write(&upload).await?;
+
+    let reply = conn.read::<Signal>().await?;
+
+    match reply {
+        Some(Signal::Ack) => {
+            println!("Upload request acknowledged");
+        }
+        _ => {
+            println!("Upload failed");
+        }
+    }
+
     Ok(())
 }
 

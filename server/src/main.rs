@@ -1,6 +1,9 @@
 use anyhow::Result;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpListener;
+use common::signals::Signal;
+use common::signals::Signal::{Download, Upload};
+use common::transmission::Connection;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -10,9 +13,24 @@ async fn main() -> Result<()> {
         let (mut socket, _) = listener.accept().await?;
 
         tokio::spawn(async move {
-            let mut buf = [0; 1024];
-            let n = socket.read(&mut buf).await.unwrap();
-            socket.write_all(&buf[0..n]).await.unwrap();
+            let mut conn = Connection::new(socket);
+            let action = conn.read::<Signal>().await?;
+
+            match action {
+                Some(Upload { filename, size }) => {
+                    println!("Uploading {} bytes to {}", size, filename);
+                    conn.write(&Signal::Ack).await?;
+                }
+                Some(Download { filename }) => {
+                    println!("Downloading {}", filename);
+                    conn.write(&Signal::Ack).await?;
+                }
+                None | _ => {
+                    println!("Invalid signal");
+                }
+            }
+
+            Ok::<_, anyhow::Error>(())
         });
     }
 }
