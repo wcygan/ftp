@@ -1,13 +1,13 @@
 use anyhow::Result;
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::net::TcpListener;
+use tokio::net::{TcpListener, ToSocketAddrs};
 use common::signals::Signal;
 use common::signals::Signal::{Download, Upload};
 use common::transmission::Connection;
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let listener = TcpListener::bind("127.0.0.1:6655").await?;
+    let listener = bind("0.0.0.0:6655").await?;
 
     loop {
         let (mut socket, _) = listener.accept().await?;
@@ -18,12 +18,12 @@ async fn main() -> Result<()> {
 
             match action {
                 Some(Upload { filename, size }) => {
-                    println!("Uploading {} bytes to {}", size, filename);
                     conn.write(&Signal::Ack).await?;
+                    conn.read_bytes_to_file(filename.as_str()).await?;
                 }
                 Some(Download { filename }) => {
-                    println!("Downloading {}", filename);
                     conn.write(&Signal::Ack).await?;
+                    conn.send_bytes_from_file(filename.as_str()).await?;
                 }
                 None | _ => {
                     println!("Invalid signal");
@@ -33,4 +33,10 @@ async fn main() -> Result<()> {
             Ok::<_, anyhow::Error>(())
         });
     }
+}
+
+async fn bind<A: ToSocketAddrs>(addr: A) -> Result<TcpListener> {
+    let listener = TcpListener::bind(addr).await?;
+    println!("Listening on: {}", listener.local_addr()?);
+    Ok(listener)
 }

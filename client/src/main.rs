@@ -15,7 +15,7 @@ async fn main() -> Result<()> {
     let f = tokio::fs::File::open(args.file.as_str()).await?;
 
     let upload = Upload {
-        filename: args.file,
+        filename: args.file.clone(),
         size: f.metadata().await?.len(),
     };
 
@@ -28,6 +28,8 @@ async fn main() -> Result<()> {
     match reply {
         Some(Signal::Ack) => {
             println!("Upload request acknowledged");
+
+            conn.send_bytes_from_file(args.file.as_str()).await?;
         }
         _ => {
             println!("Upload failed");
