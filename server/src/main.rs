@@ -1,23 +1,22 @@
 use anyhow::Result;
-use tokio::io::{AsyncReadExt, AsyncWriteExt};
-use tokio::net::{TcpListener, ToSocketAddrs};
 use common::signals::Signal;
 use common::signals::Signal::{Download, Upload};
 use common::transmission::Connection;
+use tokio::net::{TcpListener, ToSocketAddrs};
 
 #[tokio::main]
 async fn main() -> Result<()> {
     let listener = bind("0.0.0.0:6655").await?;
 
     loop {
-        let (mut socket, _) = listener.accept().await?;
+        let (socket, _) = listener.accept().await?;
 
         tokio::spawn(async move {
             let mut conn = Connection::new(socket);
             let action = conn.read::<Signal>().await?;
 
             match action {
-                Some(Upload { filename, size }) => {
+                Some(Upload { filename, size: _ }) => {
                     conn.write(&Signal::Ack).await?;
                     conn.read_bytes_to_file(filename.as_str()).await?;
                 }

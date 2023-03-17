@@ -1,11 +1,10 @@
 use anyhow::Result;
 use clap::Parser;
-use tokio::io::{AsyncReadExt};
-use tokio::net::TcpStream;
+
+use crate::args::Args;
 use common::signals::Signal;
 use common::signals::Signal::Upload;
 use common::transmission::Connection;
-use crate::args::Args;
 
 mod args;
 
@@ -38,4 +37,3 @@ async fn main() -> Result<()> {
 
     Ok(())
 }
-
