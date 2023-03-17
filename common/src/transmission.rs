@@ -1,9 +1,9 @@
-use std::fmt::Debug;
-use std::io::Cursor;
 use anyhow::Result;
 use bytes::BytesMut;
 use serde::de::DeserializeOwned;
 use serde::Serialize;
+use std::fmt::Debug;
+use std::io::Cursor;
 use tokio::io::{AsyncReadExt, AsyncWriteExt, BufWriter};
 use tokio::net::{TcpStream, ToSocketAddrs};
 
@@ -65,28 +65,13 @@ impl Connection {
 
     pub async fn send_bytes_from_file(&mut self, filename: &str) -> Result<()> {
         let mut file = tokio::fs::File::open(filename).await?;
-        loop {
-            let n = file.read_buf(&mut self.buffer).await?;
-            if n == 0 {
-                return Ok(());
-            }
-            self.stream.write_all(&self.buffer).await?;
-            self.stream.flush().await?;
-        }
+        tokio::io::copy(&mut file, &mut self.stream).await?;
+        Ok(())
     }
 
-    // TODO: figure out why a bunch of null bytes are being written to the file
     pub async fn read_bytes_to_file(&mut self, filename: &str) -> Result<()> {
         let mut file = tokio::fs::File::create(filename).await?;
-        loop {
-            if 0 == self.stream.read_buf(&mut self.buffer).await? {
-                return if self.buffer.is_empty() {
-                    Ok(())
-                } else {
-                    Err(anyhow::anyhow!("connection reset by peer"))
-                };
-            }
-            file.write_all(&self.buffer).await?;
-        }
+        tokio::io::copy(&mut self.stream, &mut file).await?;
+        Ok(())
     }
 }
