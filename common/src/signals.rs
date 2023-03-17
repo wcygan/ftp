@@ -1,4 +1,4 @@
-use serde_derive::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 
 /// The signals that can be sent between the client and server
 #[derive(Debug, Serialize, Deserialize)]
