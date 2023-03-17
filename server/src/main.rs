@@ -24,8 +24,11 @@ async fn main() -> Result<()> {
                     conn.write(&Signal::Ack).await?;
                     conn.send_bytes_from_file(filename.as_str()).await?;
                 }
-                None | _ => {
+                None => {
                     println!("Invalid signal");
+                }
+                _ => {
+                    println!("{:?} not handled", action)
                 }
             }
 
