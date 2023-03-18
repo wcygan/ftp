@@ -7,8 +7,6 @@ pub enum Signal {
     Upload {
         /// The name of the file to write to
         filename: String,
-        /// The size of the file to write
-        size: u64,
     },
     /// Download a file from the server
     Download {

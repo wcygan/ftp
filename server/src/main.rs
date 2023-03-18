@@ -16,7 +16,7 @@ async fn main() -> Result<()> {
             let action = conn.read::<Signal>().await?;
 
             match action {
-                Some(Upload { filename, size: _ }) => {
+                Some(Upload { filename }) => {
                     conn.write(&Signal::Ack).await?;
                     conn.read_bytes_to_file(filename.as_str()).await?;
                 }
