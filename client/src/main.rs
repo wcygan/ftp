@@ -12,13 +12,9 @@ mod args;
 async fn main() -> Result<()> {
     let args = args::Cli::parse();
     let (addr, req) = get(args);
-
+    let mut conn = Connection::dial(addr).await?;
     match req {
         Signal::Upload { filename } => {
-            let f = File::open(filename.as_str()).await?;
-
-            let mut conn = Connection::dial("127.0.0.1:6655").await?;
-
             conn.write(&Signal::Upload {
                 filename: filename.clone(),
             })
@@ -29,7 +25,6 @@ async fn main() -> Result<()> {
             match reply {
                 Some(Signal::Ack) => {
                     println!("Upload request acknowledged");
-
                     conn.send_bytes_from_file(filename.as_str()).await?;
                 }
                 _ => {
@@ -37,7 +32,24 @@ async fn main() -> Result<()> {
                 }
             }
         }
-        Signal::Download { filename } => {}
+        Signal::Download { filename } => {
+            conn.write(&Signal::Download {
+                filename: filename.clone(),
+            })
+            .await?;
+
+            let reply = conn.read::<Signal>().await?;
+
+            match reply {
+                Some(Signal::Ack) => {
+                    println!("Download request acknowledged");
+                    conn.read_bytes_to_file(filename.as_str()).await?;
+                }
+                _ => {
+                    println!("Download failed");
+                }
+            }
+        }
         _ => {}
     };
 

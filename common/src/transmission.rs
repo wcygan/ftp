@@ -63,12 +63,14 @@ impl Connection {
         }
     }
 
+    /// Read bytes from a socket to a file
     pub async fn send_bytes_from_file(&mut self, filename: &str) -> Result<()> {
         let mut file = tokio::fs::File::open(filename).await?;
         tokio::io::copy(&mut file, &mut self.stream).await?;
         Ok(())
     }
 
+    /// Read bytes from a file to a socket
     pub async fn read_bytes_to_file(&mut self, filename: &str) -> Result<()> {
         let mut file = tokio::fs::File::create(filename).await?;
         tokio::io::copy(&mut self.stream, &mut file).await?;
