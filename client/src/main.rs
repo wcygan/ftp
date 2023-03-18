@@ -1,10 +1,8 @@
 use crate::args::Request;
 use anyhow::Result;
-use clap::{arg, Parser};
+use clap::Parser;
 use common::signals::Signal;
 use common::transmission::Connection;
-use tokio::fs::File;
-use tokio::net::ToSocketAddrs;
 
 mod args;
 

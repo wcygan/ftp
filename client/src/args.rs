@@ -1,4 +1,4 @@
-use clap::{Parser, Subcommand};
+use clap::Parser;
 
 #[derive(Debug, Parser)]
 #[command(name = "client")]
